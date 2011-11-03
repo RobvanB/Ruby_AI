@@ -1,6 +1,7 @@
 $:.unshift File.dirname($0)
 require 'ants.rb'
 
+
 ai=AI.new
 
 ai.setup do |ai|
