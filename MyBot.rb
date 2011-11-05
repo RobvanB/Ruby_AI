@@ -18,28 +18,33 @@ ai.setup do |ai|
 end
 
 ai.run do |ai|
-  
+   
+=begin 
   #Get a list of all the food
-  mapRows = ai.settings[:rows]
-  mapCols = ai.settings[:cols]
+  @mapRows = ai.settings[:rows]
+  @mapCols = ai.settings[:cols]
   
   #$stderr.puts mapRows
-  
-  rc = 1
-  cc = 1
-  while rc <= mapRows
-    while cc <= mapCols
-      $stderr.puts ai.map[rc][cc].food
-       if (ai.map[rc][cc].food)
-        $stderr.puts "*******************"
-        $stderr.puts rc
-        $stderr.puts "*******************"
-       end
-       cc += 1       
+  #$stderr.puts mapCols
+    
+  def scanCols(row)
+    cc = 0
+    while cc <= @mapCols
+     # $stderr.puts "loop2"
+      if (ai.map[row][cc].food?)
+        $stderr.puts "TRUE" #ai.map[row][cc].food   
+      end
+      cc += 1
     end
+  end  
+  
+  rc = 0
+  while rc <= @mapRows do
+   # $stderr.puts "loop 1"
+    scanCols(rc)
     rc += 1
   end
-  
+=end
   
 	#Prevent collisions
   @orders = Hash.new            #Gets initialized 'per ant (curAnt) - need to figure out why - works fine though
@@ -66,13 +71,34 @@ ai.run do |ai|
 	end
 	
 	#Default move
-	
-	puts ai.my_ants.foods
-	  
-	
-	
-	
-	
+  ai.my_ants.each do |ant|
+    @map = ai.map
+    @map.each do |row|
+      row.each do |square|
+        if (square.food? == true)
+          
+        end
+        #$stderr.puts square.food?
+        #square.ant=nil
+        #square.hill=false
+      end
+    end  
+
+    
+    
+    
+    # try to go north, if possible; otherwise try east, south, west.
+    [:N, :E, :S, :W].each do |dir|
+      if doMove(ant, dir)
+       break
+      end
+    end
+  end
+
+	#get a list of the food
+
+
+
 =begin
 	#Default move (old)
 	ai.my_ants.each do |ant|

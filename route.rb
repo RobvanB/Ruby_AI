@@ -7,10 +7,10 @@ class Route
   @@endLoc
   @@distance
   
-  def Route(startLoc, endLoc, distance)
+  def setRoute(startLoc, endLoc)
     @@startLoc = startLoc
     @@endLoc   = endLoc
-    @@distance = distance
+   #@@distance = distance
   end
   
   def getStartLoc
@@ -22,7 +22,33 @@ class Route
   end
   
   def getDistance
-    return @@distance
+    rowDiff = (@@startLoc["row"] - @@endLoc["row"]).abs
+    colDiff = (@@startLoc["col"] - @@endLoc["col"]).abs
+    #puts colDiff
+    return rowDiff + colDiff
+  end
+  
+  def getDirection(curLoc, endLoc)
+    if(curLoc["col"] == endLoc["col"])
+      ewMove = "H" #Hold
+    else
+      if(curLoc["col"] > endLoc["col"])
+        ewMove = "W"
+      else
+        ewMove = "E"
+      end   
+    end
+    
+    if (curLoc["row"] == endLoc["row"])
+      nsMove = "H" #Hold
+    else
+      if(curLoc["row"] > endLoc["row"])
+        nsMove = "N"
+      else
+        nsMove = "S"
+      end
+    end
+    return {"ewMove"=>ewMove,"nsMove"=> nsMove}
   end
   
   def compareTo(route)
