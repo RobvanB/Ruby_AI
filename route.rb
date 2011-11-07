@@ -38,33 +38,31 @@ class Route
   end
   
   def getDirection()
+   #@@logger.log(@@orders.length.to_s)
     #Make sure we are going somewhere
-    if(@@startLoc.col == @@endLoc.col)
-      ewMove = "H" #Hold
-    else
-      if(@@startLoc.col > @@endLoc.col)
-        ewMove = checkMove("W")
+    if(@@startLoc.col != @@endLoc.col)
+        if(@@startLoc.col > @@endLoc.col)
+        move = checkMove("W")
       else
-        ewMove = checkMove("E")
-      end   
+        move = checkMove("E")
+      end  
+    else  
+      if (@@startLoc.row != @@endLoc.row)
+        if(@@startLoc.row > @@endLoc.row)
+          move = checkMove("N")
+        else
+          move = checkMove("S")
+        end
+      end  
     end
-    
-    if (@@startLoc.row == @@endLoc.row)
-      nsMove = "H" #Hold
-    else
-      if(@@startLoc.row > @@endLoc.row)
-        nsMove = checkMove("N")
-      else
-        nsMove = checkMove("S")
-      end
-    end
-    @@logger.log("ANT :" + @@ant.to_s + "Cur Loc (r/c): " + @@ant.square.row.to_s + "/" + @@ant.square.col.to_s + " ew: " + ewMove + " ns: " + nsMove )
+   
+    @@logger.log("ANT :" + @@ant.to_s + "Cur Loc (r/c): " + @@ant.square.row.to_s + "/" + @@ant.square.col.to_s + " move: " + move)
     #Remove 'old' location from orders to make sure it is free
-    if (@@orders.has_key?(@@ant.square))
-      @@orders.delete(@@ant.square)
-      @@logger.log("DELETED")
-    end
-    return {"ewMove"=>ewMove,"nsMove"=> nsMove}
+   #if(@@orders.has_key?(@@ant.square))
+   #  @@orders.delete(@@ant.square)
+   # @@logger.log("DELETED")
+   #end
+    return move
   end
   
   #See if we can move in the requested direction. If not, cycle through all directions 
@@ -77,7 +75,24 @@ class Route
          @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
        end 
        
-       if (@@ant.square.neighbor(move).land? && !@@orders.has_key?(@@ant.square.neighbor(move)))
+       if (@@ant.square.neighbor(move).land? && !@@ant.square.neighbor(move).ant? && !@@orders.has_key?(@@ant.square.neighbor(move)))
+         @@orders[@@ant.square.neighbor(move)] = @@ant
+         return move
+      else
+       #@@logger.log("Orders : " + @@orders.to_s)
+        move = cycleDir(move)
+      end
+      i += 1
+    end
+    #Cannot move ant, so now let's try moving it to previous locations
+    i = 1
+    while i < 4
+      #@@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " proposed move: " + move)
+       if (@@orders.has_key?(@@ant.square.neighbor(move)))
+         @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
+       end 
+       
+       if (@@ant.square.neighbor(move).land? && !@@ant.square.neighbor(move).ant?)
          @@orders[@@ant.square.neighbor(move)] = @@ant
          return move
       else

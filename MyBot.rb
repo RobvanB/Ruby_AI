@@ -18,13 +18,7 @@ ai.run do |ai|
 	  @targets[curAnt] = dest
 	  @route.setRoute(curAnt, dest)
 	    direction = @route.getDirection()
-	    if (direction["ewMove"] != 'H')
-	      curAnt.order(direction["ewMove"])
-      else
-        if (direction["nsMove"] != 'H')
-          curAnt.order(direction["nsMove"])
-        end
-      end    
+	    curAnt.order(direction)    
 	  return true
 	end
 #End class methods
@@ -49,7 +43,7 @@ ai.run do |ai|
     foodArray = @foodMap.sort_by{|foodSquare, distanceSorted | distanceSorted}
     #the closest foodsquare is the first entry in the array, so let's send our ant there
     goLoc = foodArray[0][0]
-    @logger.log("MyBot says: Go to (r/c): " + goLoc.row.to_s + "/" + goLoc.col.to_s )
+    @logger.log("MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
     if doMoveLoc(ant, goLoc)
       break
     end
