@@ -1,6 +1,13 @@
 $:.unshift File.dirname($0)
 require 'route.rb'
+require 'logger.rb'
 
+
+@@logger = Logger.new
+
+@@logger.log('shazaam'+ 'something')
+
+=begin
 startLoc = {"row"=>1, "col"=>2}
 endLoc   = {"row"=>1, "col"=>5}
 
@@ -9,12 +16,25 @@ route.setRoute(startLoc, endLoc)
 
 puts route.getDistance
 
-newDir = route.getDirection(startLoc, endLoc)
+newDir = route.getDirection()
 
-puts newDir["ewMove"]
-puts newDir["nsMove"]
+#puts newDir["ewMove"]
+#puts newDir["nsMove"]
 
-=begin
+myList = Hash.new
+myList["A"] = 2
+myList["notherone"] = 1
+myList["otherKey"] = 4
+myList["whatEver"] = 3
+
+myArray = myList.sort_by{|theKey, theNumber| theNumber} 
+
+puts myArray[0][0]
+puts myArray[0][1]
+puts myArray[1][0]
+puts myArray[1][1]
+
+
   @rows = 5
   @cols = 10
   

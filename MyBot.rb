@@ -1,103 +1,60 @@
 $:.unshift File.dirname($0)
 require 'ants.rb'
+require 'route.rb'
+require 'logger.rb'
 
-ai=AI.new
+ai      = AI.new
+@route  = Route.new
+@logger = Logger.new
 
 ai.setup do |ai|
 	# your setup code here, if any
-
-=begin	 
-	 ai.map.each do |row|
-      row.each do |square|
-        square.food=false
-        square.ant=nil
-        square.hill=false
-      end
-    end
-=end
 end
 
 ai.run do |ai|
-   
-=begin 
-  #Get a list of all the food
-  @mapRows = ai.settings[:rows]
-  @mapCols = ai.settings[:cols]
-  
-  #$stderr.puts mapRows
-  #$stderr.puts mapCols
-    
-  def scanCols(row)
-    cc = 0
-    while cc <= @mapCols
-     # $stderr.puts "loop2"
-      if (ai.map[row][cc].food?)
-        $stderr.puts "TRUE" #ai.map[row][cc].food   
-      end
-      cc += 1
-    end
-  end  
-  
-  rc = 0
-  while rc <= @mapRows do
-   # $stderr.puts "loop 1"
-    scanCols(rc)
-    rc += 1
-  end
-=end
-  
-	#Prevent collisions
-  @orders = Hash.new            #Gets initialized 'per ant (curAnt) - need to figure out why - works fine though
-	def doMove(curAnt, direction)
-    newLoc = curAnt.square.neighbor(direction)
-	  oldLoc = curAnt
-	  if (curAnt.square.neighbor(direction).land? && !@orders.has_key?(newLoc) )
-      curAnt.order(direction)
-      @orders[newLoc] = oldLoc	
-	    return true
-	  else
-	    return false
-	  end
-	end
-	
-	@targets
+  #Prevent collisions
+	@targets = Hash.new
 	def doMoveLoc(curAnt, dest)  #Move to specific location
 	  @targets[curAnt] = dest
-	  if (doMove(curAnt, dest))
-	    return true
-	  else
-	    return false
-	  end
+	  @route.setRoute(curAnt, dest)
+	    direction = @route.getDirection()
+	    if (direction["ewMove"] != 'H')
+	      curAnt.order(direction["ewMove"])
+      else
+        if (direction["nsMove"] != 'H')
+          curAnt.order(direction["nsMove"])
+        end
+      end    
+	  return true
 	end
+#End class methods
 	
 	#Default move
-  ai.my_ants.each do |ant|
+  @foodMap = Hash.new
+  ai.my_ants.each do |ant|  
+    #@logger.log("Current Ant: " + ant.to_s)
+    @logger.log("Turn : " + ai.turn_number.to_s)
+    #First get a list of the available food
     @map = ai.map
     @map.each do |row|
       row.each do |square|
         if (square.food? == true)
-          
+          @route.setRoute(ant, square)
+          @foodMap[square] = @route.getDistance    
         end
-        #$stderr.puts square.food?
-        #square.ant=nil
-        #square.hill=false
       end
     end  
-
-    
-    
-    
-    # try to go north, if possible; otherwise try east, south, west.
-    [:N, :E, :S, :W].each do |dir|
-      if doMove(ant, dir)
-       break
-      end
+    #get the closest location of the food
+    foodArray = Hash.new
+    foodArray = @foodMap.sort_by{|foodSquare, distanceSorted | distanceSorted}
+    #the closest foodsquare is the first entry in the array, so let's send our ant there
+    goLoc = foodArray[0][0]
+    @logger.log("MyBot says: Go to (r/c): " + goLoc.row.to_s + "/" + goLoc.col.to_s )
+    if doMoveLoc(ant, goLoc)
+      break
     end
   end
-
-	#get a list of the food
-
-
+end
 
 =begin
 	#Default move (old)
@@ -110,5 +67,3 @@ ai.run do |ai|
 		end
 	end
 =end
-
-end
