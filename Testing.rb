@@ -1,13 +1,34 @@
 $:.unshift File.dirname($0)
 require 'route.rb'
 require 'logger.rb'
+require 'robTest.rb'
+require 'ruby-debug'
 
+#Logger test
+  @@logger = Logger.new
+  debugger
+  #@@logger.debug=true  
+  @@logger.log('shazaam'+ 'something')
+#End logger test
 
-@@logger = Logger.new
-
-@@logger.log('shazaam'+ 'something')
 
 =begin
+
+#Object test
+  tc1 = Rob.new
+  
+  tc1.theParm="Shazaam"
+  
+  tc2 = tc1.dup
+  
+  #tc2.theParm="WHammo"
+  
+  puts tc1.theParm
+  
+  puts tc2.theParm
+#End Object test
+
+
 startLoc = {"row"=>1, "col"=>2}
 endLoc   = {"row"=>1, "col"=>5}
 

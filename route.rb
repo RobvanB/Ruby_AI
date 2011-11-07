@@ -8,6 +8,7 @@ class Route
   @@endLoc
   @@distance
   @@logger = Logger.new
+  @@logger.debug = true
   @@orders = Hash.new
   
   def setRoute(theAnt, endLoc)
@@ -39,6 +40,8 @@ class Route
   
   def getDirection()
    #@@logger.log(@@orders.length.to_s)
+   #@@logger.log("CURRENT r/c: " + @@startLoc.row.to_s + "/" + @@startLoc.col.to_s)
+   #@@logger.log("DIRECTIONS r/c: " + @@endLoc.row.to_s + "/" + @@endLoc.col.to_s)
     #Make sure we are going somewhere
     if(@@startLoc.col != @@endLoc.col)
         if(@@startLoc.col > @@endLoc.col)
@@ -56,11 +59,11 @@ class Route
       end  
     end
    
-    @@logger.log("ANT :" + @@ant.to_s + "Cur Loc (r/c): " + @@ant.square.row.to_s + "/" + @@ant.square.col.to_s + " move: " + move)
+    #@@logger.log("ANT :" + @@ant.to_s + "Cur Loc (r/c): " + @@ant.square.row.to_s + "/" + @@ant.square.col.to_s + " move: " + move)
     #Remove 'old' location from orders to make sure it is free
    #if(@@orders.has_key?(@@ant.square))
    #  @@orders.delete(@@ant.square)
-   # @@logger.log("DELETED")
+   # #@@logger.log("DELETED")
    #end
     return move
   end
@@ -71,9 +74,9 @@ class Route
     #@@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " start move: " + move)
     while i < 4
       #@@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " proposed move: " + move)
-       if (@@orders.has_key?(@@ant.square.neighbor(move)))
-         @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
-       end 
+       #if (@@orders.has_key?(@@ant.square.neighbor(move)))
+        # @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
+       #end 
        
        if (@@ant.square.neighbor(move).land? && !@@ant.square.neighbor(move).ant? && !@@orders.has_key?(@@ant.square.neighbor(move)))
          @@orders[@@ant.square.neighbor(move)] = @@ant
@@ -88,9 +91,9 @@ class Route
     i = 1
     while i < 4
       #@@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " proposed move: " + move)
-       if (@@orders.has_key?(@@ant.square.neighbor(move)))
-         @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
-       end 
+       #if (@@orders.has_key?(@@ant.square.neighbor(move)))
+        # @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
+       #end 
        
        if (@@ant.square.neighbor(move).land? && !@@ant.square.neighbor(move).ant?)
          @@orders[@@ant.square.neighbor(move)] = @@ant
@@ -101,8 +104,8 @@ class Route
       end
       i += 1
     end
-    @@logger.log("CANNOT MOVE ANT :" + @@ant.to_s + " counter: " + i.to_s + " last move: " + move)
-    return "H"
+    #@@logger.log("CANNOT MOVE ANT :" + @@ant.to_s + " counter: " + i.to_s + " last move: " + move)
+    return "W"
   end  
   
   def cycleDir(dir)
