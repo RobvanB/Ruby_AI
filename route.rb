@@ -4,12 +4,12 @@ require 'logger.rb'
 
 class Route
   
-  @@startLoc
-  @@endLoc
-  @@distance
-  @@logger = Logger.new
-  @@logger.debug = true
-  @@orders = Hash.new
+  @@startLoc     = nil
+  @@endLoc       = nil
+  @@distance     = nil
+  @@logger       = Logger.new
+  @@logger.debug = false
+  @@orders       = Hash.new
   
   def setRoute(theAnt, endLoc)
     @@ant      = theAnt

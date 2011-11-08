@@ -1,12 +1,12 @@
 $:.unshift File.dirname($0)
-require 'route.rb'
+#require 'route.rb'
 require 'logger.rb'
 require 'robTest.rb'
-require 'ruby-debug'
+#require 'ruby-debug.rb'
 
 #Logger test
   @@logger = Logger.new
-  debugger
+  #debugger
   #@@logger.debug=true  
   @@logger.log('shazaam'+ 'something')
 #End logger test

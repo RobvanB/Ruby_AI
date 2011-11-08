@@ -5,9 +5,9 @@ class Logger
     @debug = false
   end
   def log(theLogMessage)
-    if (@debug)
+    if(@debug)
       logfile = File.new("/usr1/home/rob/ai_dev/AntsLog.txt", "a")
-      logfile.write (theLogMessage + "\n")
+      logfile.write(theLogMessage + "\n")
       logfile.close  
     end
   end

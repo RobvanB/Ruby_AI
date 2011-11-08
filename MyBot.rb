@@ -6,7 +6,7 @@ require 'logger.rb'
 ai      = AI.new
 @route  = Route.new
 @logger = Logger.new
-@logger.debug = true
+@logger.debug = false
 
 ai.setup do |ai|
 	# your setup code here, if any
@@ -28,8 +28,9 @@ ai.run do |ai|
 	#Default move
   @foodMap = Hash.new
   ai.my_ants.each do |ant|  
-    #@logger.log("Current Ant: " + ant.to_s)
-    #@logger.log("Turn : " + ai.turn_number.to_s)
+    @logger.log("Turn : " + ai.turn_number.to_s)
+    @logger.log("Current Ant (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s)
+    
     #First get a list of the available food
     @map = ai.map
     @map.each do |row|
@@ -56,9 +57,7 @@ ai.run do |ai|
       goLoc = foodArray[0][0]
       #@logger.log("MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
     end 
-    if doMoveLoc(ant, goLoc)
-      break
-    end
+    doMoveLoc(ant, goLoc)
   end
 end
 
