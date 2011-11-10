@@ -1,39 +1,39 @@
+
+#$:.unshift File.dirname('/var/lib/gems/1.8/gems/ruby-debug-0.10.4/cli/ruby-debug.rb')
+#$:.unshift File.dirname('/var/lib/gems/1.8/gems/ruby-debug-base-0.10.4/lib/ruby-debug-base.rb')
+#require 'ruby-debug.rb'
+
 $:.unshift File.dirname($0)
 require 'ants.rb'
 require 'logger.rb'
 
+
 class Route
   
-  @@startLoc     = nil
-  @@endLoc       = nil
-  @@distance     = nil
-  @@logger       = Logger.new
-  @@logger.debug = false
-  @@orders       = Hash.new
+  @startLoc     = nil
+  @endLoc       = nil
+  @distance     = nil
+ @@logger       = Logger.new
+ @@logger.debug = false
+ @@orders       = Hash.new
   
-  def setRoute(theAnt, endLoc)
-    @@ant      = theAnt
-    @@startLoc = @@ant.square
-    @@endLoc   = endLoc
+  def setRoute(theAnt, endLoc, maxRows, maxCols)
+    @ant      = theAnt
+    @startLoc = @ant.square
+    @endLoc   = endLoc
+    @maxRows  = maxRows
+    @maxCols  = maxCols
    #@@distance = distance
   end
-  
-  def getStartLoc
-    return @@startLoc
-  end
-  
-  def getEndLoc
-    return @@endLoc
-  end
-  
+   
   def clearOrders
     @@orders.clear
   end
   
   def getDistance
   #  $stderr.puts "ROUTE"  + @@startLoc.row.to_s
-   rowDiff = (@@startLoc.row - @@endLoc.row).abs
-   colDiff = (@@startLoc.col - @@endLoc.col).abs
+   rowDiff = (@startLoc.row - @endLoc.row).abs
+   colDiff = (@startLoc.col - @endLoc.col).abs
     #puts colDiff
     return rowDiff + colDiff
   end
@@ -43,23 +43,44 @@ class Route
    #@@logger.log("CURRENT r/c: " + @@startLoc.row.to_s + "/" + @@startLoc.col.to_s)
    #@@logger.log("DIRECTIONS r/c: " + @@endLoc.row.to_s + "/" + @@endLoc.col.to_s)
     #Make sure we are going somewhere
-    if(@@startLoc.col != @@endLoc.col)
-        if(@@startLoc.col > @@endLoc.col)
+    
+    if(@startLoc.col < @endLoc.col)
+      if(@endLoc.col - @startLoc.col >= @maxCols / 2)
         move = checkMove("W")
       else
         move = checkMove("E")
       end  
-    else  
-      if (@@startLoc.row != @@endLoc.row)
-        if(@@startLoc.row > @@endLoc.row)
-          move = checkMove("N")
-        else
-          move = checkMove("S")
-        end
-      end  
     end
-   
-    #@@logger.log("ANT :" + @@ant.to_s + "Cur Loc (r/c): " + @@ant.square.row.to_s + "/" + @@ant.square.col.to_s + " move: " + move)
+    
+    if(@startLoc.col > @endLoc.col)
+      if(@startLoc.col - @endLoc.col >= @maxCols / 2)
+        move = checkMove "E"
+      else
+        move = checkMove "W"
+      end
+    end
+    
+    if(@startLoc.row < @endLoc.row)
+      if(@endLoc.row - @startLoc.row >= @maxRows / 2)
+        move = checkMove("N")
+      else
+        move = checkMove("S")
+      end
+    end
+    
+    if(@startLoc.row > @endLoc.row)
+      if(@startLoc.row - @endLoc.row >= @maxRows / 2)
+        move = checkMove("S")
+      else
+        move = checkMove("N")
+      end
+    end
+    
+    if (@startLoc.row == @endLoc.row && @startLoc.col == @endLoc.col) 
+      move = checkMove("W") #for some reason we are already there... just go West
+    end
+    
+    @@logger.log("ANT :" + @ant.to_s + "Cur Loc (r/c): " + @ant.square.row.to_s + "/" + @ant.square.col.to_s + " move: " + move)
     #Remove 'old' location from orders to make sure it is free
    #if(@@orders.has_key?(@@ant.square))
    #  @@orders.delete(@@ant.square)
@@ -78,8 +99,8 @@ class Route
         # @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
        #end 
        
-       if (@@ant.square.neighbor(move).land? && !@@ant.square.neighbor(move).ant? && !@@orders.has_key?(@@ant.square.neighbor(move)))
-         @@orders[@@ant.square.neighbor(move)] = @@ant
+       if (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant? && !@@orders.has_key?(@ant.square.neighbor(move)))
+         @@orders[@ant.square.neighbor(move)] = @ant
          return move
       else
        #@@logger.log("Orders : " + @@orders.to_s)
@@ -95,8 +116,8 @@ class Route
         # @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
        #end 
        
-       if (@@ant.square.neighbor(move).land? && !@@ant.square.neighbor(move).ant?)
-         @@orders[@@ant.square.neighbor(move)] = @@ant
+       if (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant?)
+         @@orders[@ant.square.neighbor(move)] = @ant
          return move
       else
        #@@logger.log("Orders : " + @@orders.to_s)
@@ -124,7 +145,7 @@ class Route
   end
 #Code below currently not used 
   def compareTo(route)
-    return @@distance - route.distance
+    return @distance - route.distance
   end
   
   def hashCode
@@ -134,7 +155,7 @@ class Route
   def equals curRoute
     result = false
     if (curRoute.instance_of? Route)
-      if (curRoute.getStartLoc == @@startLoc && curRoute.getEndLoc == @@endLoc)  
+      if (curRoute.getStartLoc == @startLoc && curRoute.getEndLoc == @endLoc)  
         result = true
       end
       return result

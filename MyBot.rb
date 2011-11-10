@@ -10,6 +10,8 @@ ai      = AI.new
 
 ai.setup do |ai|
 	# your setup code here, if any
+  @maxRows = ai.rows
+  @maxCols = ai.cols
 end
 
 ai.run do |ai|
@@ -17,7 +19,7 @@ ai.run do |ai|
 	@targets = Hash.new
 	def doMoveLoc(curAnt, dest)  #Move to specific location
 	  @targets[curAnt] = dest
-	  @route.setRoute(curAnt, dest)
+	  @route.setRoute(curAnt, dest, @maxRows, @maxCols)
 	    direction = @route.getDirection()
 	    #@logger.log("ORDER : "+ direction)
 	    curAnt.order(direction)    
@@ -30,13 +32,13 @@ ai.run do |ai|
   ai.my_ants.each do |ant|  
     @logger.log("Turn : " + ai.turn_number.to_s)
     @logger.log("Current Ant (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s)
-    
+
     #First get a list of the available food
     @map = ai.map
     @map.each do |row|
       row.each do |square|
         if (square.food? == true)
-          @route.setRoute(ant, square)
+          @route.setRoute(ant, square, ai.rows, ai.cols)
           @foodMap[square] = @route.getDistance    
         end
       end
@@ -49,13 +51,13 @@ ai.run do |ai|
       #@logger.log("NEW LOC: " + goLoc.row.to_s + "/" + goLoc.col.to_s)
       #@logger.log("ANT SQUARE : " + ant.square.col.to_s)
       goLoc = ant.square.neighbor("W")
-      @route.setRoute(ant, goLoc)     
+      @route.setRoute(ant, goLoc, ai.rows, ai.cols)     
     else 
       foodArray = Hash.new
       foodArray = @foodMap.sort_by{|foodSquare, distanceSorted | distanceSorted}
       #the closest foodsquare is the first entry in the array, so let's send our ant there
       goLoc = foodArray[0][0]
-      #@logger.log("MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
+      @logger.log("Turn: " + ai.turn_number.to_s + " MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
     end 
     doMoveLoc(ant, goLoc)
   end
