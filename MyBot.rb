@@ -6,7 +6,7 @@ require 'logger.rb'
 ai      = AI.new
 @route  = Route.new
 @logger = Logger.new
-@logger.debug = false
+@logger.debug = true
 
 class Location
   attr_accessor :row
@@ -67,7 +67,7 @@ ai.run do |ai|
 	end
 #End class methods
 	
-	@logger.log("Turn: " + ai.turn_number.to_s)
+	#@logger.log("Turn: " + ai.turn_number.to_s)
 	
 	#Default move
   @foodMap = Hash.new
@@ -80,6 +80,7 @@ ai.run do |ai|
     @map.each do |row|
       row.each do |square|
         if (square.food? == true && !@targets.has_key?(square))
+          @logger.log("Food at: " + square.row.to_s + "/" + square.col.to_s)
           @route.setRoute(ant, square, ai.rows, ai.cols)
           @foodMap[square] = @route.getDistance    
         end
@@ -94,6 +95,10 @@ ai.run do |ai|
       foodArray = @foodMap.sort_by{|foodSquare, distanceSorted | distanceSorted}
       #the closest foodsquare is the first entry in the array, so let's send our ant there
       goLoc = foodArray[0][0]
+     #@logger.log("FoodArray r/c: " + foodArray[0][0].row.to_s + '/' + foodArray[0][0].col.to_s)
+     #@logger.log("FoodArray distance: " + foodArray[0][1].to_s)
+     #@logger.log("FoodArray r/c: " + foodArray[1][0].row.to_s + '/' + foodArray[0][0].col.to_s)
+     #@logger.log("FoodArray distance: " + foodArray[1][1].to_s)
     else
       #No food. Go explore - get the closest non-seen square
       unseenDist  = Hash.new
@@ -105,7 +110,7 @@ ai.run do |ai|
       goLoc = unseenArray[0][0]
       @logger.log("Unseen Go Loc: " + goLoc.to_s)  
     end  
-    #@logger.log("Turn: " + ai.turn_number.to_s + " MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
+    @logger.log("Turn: " + ai.turn_number.to_s + " MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
     doMoveLoc(ant, goLoc)
   end
 end

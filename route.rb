@@ -13,7 +13,7 @@ class Route
   @endLoc       = nil
   @distance     = nil
  @@logger       = Logger.new
- @@logger.debug = false
+ @@logger.debug = true
  @@orders       = Hash.new
   
   def setRoute(theAnt, endLoc, maxRows, maxCols)
@@ -28,9 +28,10 @@ class Route
    
   def getDistance
   #  $stderr.puts "ROUTE"  + @@startLoc.row.to_s
-   rowDiff = [@startLoc.row , @endLoc.row].min + [@startLoc.row , @endLoc.row].max 
-   colDiff = [@startLoc.col , @endLoc.col].min + [@startLoc.col , @endLoc.col].max
+   rowDiff = [@startLoc.row , @endLoc.row].max - [@startLoc.row , @endLoc.row].min 
+   colDiff = [@startLoc.col , @endLoc.col].max - [@startLoc.col , @endLoc.col].min  
    #puts colDiff
+  #@@logger.log("Distance: " + rowDiff.to_s + ' + ' + colDiff.to_s)
    return rowDiff + colDiff
   end
   
