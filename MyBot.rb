@@ -3,10 +3,11 @@ require 'ants.rb'
 require 'route.rb'
 require 'logger.rb'
 
-ai      = AI.new
-@route  = Route.new
-@logger = Logger.new
+ai            = AI.new
+@route        = Route.new
+@logger       = Logger.new
 @logger.debug = true
+@@enemyHills  = Hash.new
 
 class Location
   attr_accessor :row
@@ -79,38 +80,49 @@ ai.run do |ai|
     @map = ai.map
     @map.each do |row|
       row.each do |square|
-        if (square.food? == true && !@targets.has_key?(square))
-          @logger.log("Food at: " + square.row.to_s + "/" + square.col.to_s)
-          @route.setRoute(ant, square, ai.rows, ai.cols)
-          @foodMap[square] = @route.getDistance    
-        end
-        if (square.hill? == true)
-          @logger.log("Hill")
+        if(square.hill? != false && square.hill? != 0)
+         # @logger.log("Enemy hill : " + square.hill.to_s + " : " + square.row.to_s + "/" + square.col.to_s)
+          @@enemyHills[square] = ant
+        else
+          if(square.food? == true && !@targets.has_key?(square))
+            #@logger.log("Food at: " + square.row.to_s + "/" + square.col.to_s)
+            @route.setRoute(ant, square, ai.rows, ai.cols)
+            @foodMap[square] = @route.getDistance    
+          end
         end
       end
     end  
-    
-    if (@foodMap.length > 0)
-      foodArray = Hash.new
-      foodArray = @foodMap.sort_by{|foodSquare, distanceSorted | distanceSorted}
-      #the closest foodsquare is the first entry in the array, so let's send our ant there
-      goLoc = foodArray[0][0]
-     #@logger.log("FoodArray r/c: " + foodArray[0][0].row.to_s + '/' + foodArray[0][0].col.to_s)
-     #@logger.log("FoodArray distance: " + foodArray[0][1].to_s)
-     #@logger.log("FoodArray r/c: " + foodArray[1][0].row.to_s + '/' + foodArray[0][0].col.to_s)
-     #@logger.log("FoodArray distance: " + foodArray[1][1].to_s)
+ 
+    #Get them hills
+    #For now, send all ants, gotta change this later to be a bit more balanced
+    if(@@enemyHills.length > 0)
+      @@enemyHills.each_key do |hill|
+        @route.setRoute(ant, hill, ai.rows, ai.cols)
+        @@enemyHills[hill] = @route.getDistance
+      end
+      
+      hillArray = Hash.new
+      hillArray = @@enemyHills.sort_by{|hill, distanceSorted| distanceSorted}
+      goLoc = hillArray[0][0]
     else
-      #No food. Go explore - get the closest non-seen square
-      unseenDist  = Hash.new
-      @notSeen.each_key do |unseenLoc|
-        @route.setRoute(ant, unseenLoc, ai.rows, ai.cols)
-        unseenDist[unseenLoc] = @route.getDistance
-      end
-      unseenArray = unseenDist.sort_by{|location, distanceSorted| distanceSorted}
-      goLoc = unseenArray[0][0]
-      @logger.log("Unseen Go Loc: " + goLoc.to_s)  
-    end  
-    @logger.log("Turn: " + ai.turn_number.to_s + " MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
+      if (@foodMap.length > 0)
+        foodArray = Hash.new
+        foodArray = @foodMap.sort_by{|foodSquare, distanceSorted | distanceSorted}
+        #the closest foodsquare is the first entry in the array, so let's send our ant there
+        goLoc = foodArray[0][0]
+       else
+        #No food. Go explore - get the closest non-seen square
+        unseenDist  = Hash.new
+        @notSeen.each_key do |unseenLoc|
+          @route.setRoute(ant, unseenLoc, ai.rows, ai.cols)
+          unseenDist[unseenLoc] = @route.getDistance
+        end
+        unseenArray = unseenDist.sort_by{|location, distanceSorted| distanceSorted}
+        goLoc = unseenArray[0][0]
+        #@logger.log("Unseen Go Loc: " + goLoc.to_s)  
+      end  
+    end
+    #@logger.log("Turn: " + ai.turn_number.to_s + " MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
     doMoveLoc(ant, goLoc)
   end
 end

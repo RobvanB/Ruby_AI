@@ -9,7 +9,14 @@ foo = Hash.new
 foo['Key1'] = 'theData'
 foo['Key2'] = 'theData1'
 
-puts foo.keys
+j = 1
+foo.each_key do |k|
+  foo[k] = j
+  j += 1
+  puts j
+end
+
+puts foo.to_s
 
 =begin
 #Logger test

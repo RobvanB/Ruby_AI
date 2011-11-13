@@ -13,7 +13,7 @@ class Route
   @endLoc       = nil
   @distance     = nil
  @@logger       = Logger.new
- @@logger.debug = true
+ @@logger.debug = false
  @@orders       = Hash.new
   
   def setRoute(theAnt, endLoc, maxRows, maxCols)
