@@ -4,6 +4,14 @@ require 'logger.rb'
 require 'robTest.rb'
 #require 'ruby-debug.rb'
 
+foo = Hash.new
+
+foo['Key1'] = 'theData'
+foo['Key2'] = 'theData1'
+
+puts foo.keys
+
+=begin
 #Logger test
   @@logger = Logger.new
   #debugger
@@ -12,7 +20,7 @@ require 'robTest.rb'
 #End logger test
 
 
-=begin
+
 
 #Object test
   tc1 = Rob.new

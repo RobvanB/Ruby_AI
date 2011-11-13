@@ -8,57 +8,104 @@ ai      = AI.new
 @logger = Logger.new
 @logger.debug = false
 
+class Location
+  attr_accessor :row
+  attr_accessor :col
+end
+
 ai.setup do |ai|
-	# your setup code here, if any
+	#Setup code here
   @maxRows = ai.rows
   @maxCols = ai.cols
+  @radius  = ai.viewradius
+  @notSeen = Hash.new
+  location = Location.new   
+  
+  rows = 0
+  while (rows < @maxRows)
+    cols = 0
+    while (cols < @maxCols)
+      location.row = rows
+      location.col = cols
+      @notSeen[location] = "Dummy"
+      cols += 1
+    end 
+    rows += 1
+  end
 end
 
 ai.run do |ai|
   #Prevent collisions
-	@targets = Hash.new
+  @targets = Hash.new
 	def doMoveLoc(curAnt, dest)  #Move to specific location
-	  @targets[curAnt] = dest
+	 #@targets[curAnt] = dest
+	  @targets[dest] = curAnt
 	  @route.setRoute(curAnt, dest, @maxRows, @maxCols)
 	    direction = @route.getDirection()
 	    #@logger.log("ORDER : "+ direction)
 	    curAnt.order(direction)    
 	  return true
 	end
+	
+	def removeSeen(curLoc)
+	 rc = 0
+	 curRow = curLoc.square.row
+	 curCol = curLoc.square.col
+	 while(rc < @radius)
+	   cc = 0
+	   while(cc < @radius)
+	     delRow = curRow + rc
+	     delCol = curCol + cc
+	     @notSeen.delete([delRow, delCol])
+	     delRow = curRow - rc
+       delCol = curCol - cc
+       @notSeen.delete([delRow, delCol])
+	     cc += 1 
+	   end
+	   rc += 1
+	  end
+	end
 #End class methods
+	
+	@logger.log("Turn: " + ai.turn_number.to_s)
 	
 	#Default move
   @foodMap = Hash.new
   ai.my_ants.each do |ant|  
-    @logger.log("Turn : " + ai.turn_number.to_s)
-    @logger.log("Current Ant (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s)
-
-    #First get a list of the available food
+    #Remove all 'visible' locations from our 'unseen' map
+    removeSeen(ant)
+     
+    #Get a list of the available food
     @map = ai.map
     @map.each do |row|
       row.each do |square|
-        if (square.food? == true)
+        if (square.food? == true && !@targets.has_key?(square))
           @route.setRoute(ant, square, ai.rows, ai.cols)
           @foodMap[square] = @route.getDistance    
         end
+        if (square.hill? == true)
+          @logger.log("Hill")
+        end
       end
     end  
-    #get the closest location of the food
-    # if no food found, just go west
-    if (@foodMap.length == 0)
-      #@logger.log("CUR LOC: " + goLoc.row.to_s + "/" + goLoc.col.to_s)
-      #@logger.log("ANT SQUARE : " + ant.square.col.to_s)
-      #@logger.log("NEW LOC: " + goLoc.row.to_s + "/" + goLoc.col.to_s)
-      #@logger.log("ANT SQUARE : " + ant.square.col.to_s)
-      goLoc = ant.square.neighbor("W")
-      @route.setRoute(ant, goLoc, ai.rows, ai.cols)     
-    else 
+    
+    if (@foodMap.length > 0)
       foodArray = Hash.new
       foodArray = @foodMap.sort_by{|foodSquare, distanceSorted | distanceSorted}
       #the closest foodsquare is the first entry in the array, so let's send our ant there
       goLoc = foodArray[0][0]
-      @logger.log("Turn: " + ai.turn_number.to_s + " MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
-    end 
+    else
+      #No food. Go explore - get the closest non-seen square
+      unseenDist  = Hash.new
+      @notSeen.each_key do |unseenLoc|
+        @route.setRoute(ant, unseenLoc, ai.rows, ai.cols)
+        unseenDist[unseenLoc] = @route.getDistance
+      end
+      unseenArray = unseenDist.sort_by{|location, distanceSorted| distanceSorted}
+      goLoc = unseenArray[0][0]
+      @logger.log("Unseen Go Loc: " + goLoc.to_s)  
+    end  
+    #@logger.log("Turn: " + ai.turn_number.to_s + " MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
     doMoveLoc(ant, goLoc)
   end
 end

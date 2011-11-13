@@ -7,7 +7,6 @@ $:.unshift File.dirname($0)
 require 'ants.rb'
 require 'logger.rb'
 
-
 class Route
   
   @startLoc     = nil
@@ -23,19 +22,16 @@ class Route
     @endLoc   = endLoc
     @maxRows  = maxRows
     @maxCols  = maxCols
+   @@orders[@ant] = endLoc    
    #@@distance = distance
   end
    
-  def clearOrders
-    @@orders.clear
-  end
-  
   def getDistance
   #  $stderr.puts "ROUTE"  + @@startLoc.row.to_s
-   rowDiff = (@startLoc.row - @endLoc.row).abs
-   colDiff = (@startLoc.col - @endLoc.col).abs
-    #puts colDiff
-    return rowDiff + colDiff
+   rowDiff = [@startLoc.row , @endLoc.row].min + [@startLoc.row , @endLoc.row].max 
+   colDiff = [@startLoc.col , @endLoc.col].min + [@startLoc.col , @endLoc.col].max
+   #puts colDiff
+   return rowDiff + colDiff
   end
   
   def getDirection()
@@ -81,11 +77,6 @@ class Route
     end
     
     @@logger.log("ANT :" + @ant.to_s + "Cur Loc (r/c): " + @ant.square.row.to_s + "/" + @ant.square.col.to_s + " move: " + move)
-    #Remove 'old' location from orders to make sure it is free
-   #if(@@orders.has_key?(@@ant.square))
-   #  @@orders.delete(@@ant.square)
-   # #@@logger.log("DELETED")
-   #end
     return move
   end
   
@@ -102,11 +93,11 @@ class Route
        if (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant? && !@@orders.has_key?(@ant.square.neighbor(move)))
          @@orders[@ant.square.neighbor(move)] = @ant
          return move
-      else
-       #@@logger.log("Orders : " + @@orders.to_s)
+       else
+        #@@logger.log("Orders : " + @@orders.to_s)
         move = cycleDir(move)
-      end
-      i += 1
+       end
+       i += 1
     end
     #Cannot move ant, so now let's try moving it to previous locations
     i = 1
