@@ -4,19 +4,33 @@ require 'logger.rb'
 require 'robTest.rb'
 #require 'ruby-debug.rb'
 
-foo = Hash.new
 
-foo['Key1'] = 'theData'
-foo['Key2'] = 'theData1'
-
-j = 1
-foo.each_key do |k|
-  foo[k] = j
-  j += 1
-  puts j
+class HillHolder
+  attr_accessor :hill
+  attr_accessor :mainAnt
+  attr_accessor :buddy
 end
 
-puts foo.to_s
+hillHolder = HillHolder.new
+hillHolderArray = Array.new
+
+hillHolder.hill = 'h1'
+hillHolder.mainAnt = 'm1'
+hillHolder.buddy = 'b1'
+
+hillHolderArray.push(hillHolder.dup)
+
+hillHolder.hill = 'h2'
+hillHolder.mainAnt = 'm2'
+hillHolder.buddy = 'b2'
+
+hillHolderArray.push(hillHolder.dup)
+
+hillHolderArray.each do |hill|
+  puts hill.hill
+  puts hill.mainAnt
+  puts hill.buddy
+end
 
 =begin
 #Logger test

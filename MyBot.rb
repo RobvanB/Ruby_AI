@@ -6,7 +6,7 @@ require 'logger.rb'
 ai            = AI.new
 @route        = Route.new
 @logger       = Logger.new
-@logger.debug = true
+@logger.debug = false
 @@enemyHills  = Hash.new
 
 class Location
