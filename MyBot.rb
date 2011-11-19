@@ -10,6 +10,11 @@ class TargetList
   attr_accessor :type
 end
 
+class AntLocation
+  attr_accessor :row
+  attr_accessor :col
+end
+
 ####################################
 ai               = AI.new
 @route           = Route.new
