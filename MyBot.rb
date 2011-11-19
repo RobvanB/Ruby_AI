@@ -3,138 +3,160 @@ require 'ants.rb'
 require 'route.rb'
 require 'logger.rb'
 
-ai            = AI.new
-@route        = Route.new
-@logger       = Logger.new
-@logger.debug = false
-@@enemyHills  = Hash.new
-
-class Location
-  attr_accessor :row
-  attr_accessor :col
+class TargetList
+  attr_accessor :target
+  attr_accessor :ant
+  attr_accessor :distance
+  attr_accessor :type
 end
 
+####################################
+ai               = AI.new
+@route           = Route.new
+@logger          = Logger.new
+@logger.debug    = false
+#End declarations
+
+#Begin setup code 
 ai.setup do |ai|
-	#Setup code here
   @maxRows = ai.rows
   @maxCols = ai.cols
   @radius  = ai.viewradius
   @notSeen = Hash.new
-  location = Location.new   
+  antLoc   = AntLocation.new
   
   rows = 0
   while (rows < @maxRows)
     cols = 0
     while (cols < @maxCols)
-      location.row = rows
-      location.col = cols
-      @notSeen[location] = "Dummy"
+      antLoc.row = rows
+      antLoc.col = cols
+      @notSeen[antLoc] = "Dummy"
       cols += 1
     end 
     rows += 1
   end
 end
+#End setup code
+
+def removeSeen(curLoc)
+ rc = 0
+ curRow = curLoc.square.row
+ curCol = curLoc.square.col
+ while(rc < @radius)
+   cc = 0
+   while(cc < @radius)
+     delRow = curRow + rc
+     delCol = curCol + cc
+     @notSeen.delete([delRow, delCol])
+     delRow = curRow - rc
+     delCol = curCol - cc
+     @notSeen.delete([delRow, delCol])
+     cc += 1 
+   end
+   rc += 1
+  end
+end
+#End class methods
+ #@logger.log("======Begin Turn: " + ai.turn_number.to_s + " Ant: " + ant.square.row.to_s + "/" + ant.square.col.to_s)
 
 ai.run do |ai|
-  #Prevent collisions
+  @logger.log("Turn: " + ai.turn_number.to_s)
+  hillTargets = []
+  foodTargets = []
+  targetHash  = Hash.new  #Hash of TargetList classes and distance
+  #@route.clearOrders
   @targets = Hash.new
-	def doMoveLoc(curAnt, dest)  #Move to specific location
-	 #@targets[curAnt] = dest
-	  @targets[dest] = curAnt
-	  @route.setRoute(curAnt, dest, @maxRows, @maxCols)
-	    direction = @route.getDirection()
-	    #@logger.log("ORDER : "+ direction)
-	    curAnt.order(direction)    
-	  return true
-	end
+  #@foodMap = Hash.new
 	
-	def removeSeen(curLoc)
-	 rc = 0
-	 curRow = curLoc.square.row
-	 curCol = curLoc.square.col
-	 while(rc < @radius)
-	   cc = 0
-	   while(cc < @radius)
-	     delRow = curRow + rc
-	     delCol = curCol + cc
-	     @notSeen.delete([delRow, delCol])
-	     delRow = curRow - rc
-       delCol = curCol - cc
-       @notSeen.delete([delRow, delCol])
-	     cc += 1 
-	   end
-	   rc += 1
-	  end
-	end
-#End class methods
-	
-	#@logger.log("Turn: " + ai.turn_number.to_s)
-	
-	#Default move
-  @foodMap = Hash.new
   ai.my_ants.each do |ant|  
     #Remove all 'visible' locations from our 'unseen' map
     removeSeen(ant)
-     
-    #Get a list of the available food
+    #Collect all data on food and hills  
     @map = ai.map
     @map.each do |row|
       row.each do |square|
-        if(square.hill? != false && square.hill? != 0)
-         # @logger.log("Enemy hill : " + square.hill.to_s + " : " + square.row.to_s + "/" + square.col.to_s)
-          @@enemyHills[square] = ant
-        else
-          if(square.food? == true && !@targets.has_key?(square))
-            #@logger.log("Food at: " + square.row.to_s + "/" + square.col.to_s)
-            @route.setRoute(ant, square, ai.rows, ai.cols)
-            @foodMap[square] = @route.getDistance    
+        
+        if(square.hill? != false && square.hill? != 0) #Enemy Hill
+         if (!hillTargets.include?(square))
+           hillTargets.push(square)
+         end  
+        end
+        
+        if(square.food? == true)
+          if (!foodTargets.include?(square))
+            foodTargets.push(square)     
           end
         end
-      end
-    end  
- 
-    #Get them hills
-    #For now, send all ants, gotta change this later to be a bit more balanced
-    if(@@enemyHills.length > 0)
-      @@enemyHills.each_key do |hill|
-        @route.setRoute(ant, hill, ai.rows, ai.cols)
-        @@enemyHills[hill] = @route.getDistance
-      end
-      
-      hillArray = Hash.new
-      hillArray = @@enemyHills.sort_by{|hill, distanceSorted| distanceSorted}
-      goLoc = hillArray[0][0]
-    else
-      if (@foodMap.length > 0)
-        foodArray = Hash.new
-        foodArray = @foodMap.sort_by{|foodSquare, distanceSorted | distanceSorted}
-        #the closest foodsquare is the first entry in the array, so let's send our ant there
-        goLoc = foodArray[0][0]
-       else
-        #No food. Go explore - get the closest non-seen square
-        unseenDist  = Hash.new
-        @notSeen.each_key do |unseenLoc|
-          @route.setRoute(ant, unseenLoc, ai.rows, ai.cols)
-          unseenDist[unseenLoc] = @route.getDistance
-        end
-        unseenArray = unseenDist.sort_by{|location, distanceSorted| distanceSorted}
-        goLoc = unseenArray[0][0]
-        #@logger.log("Unseen Go Loc: " + goLoc.to_s)  
-      end  
-    end
-    #@logger.log("Turn: " + ai.turn_number.to_s + " MyBot says: Go from - to (r/c): " + ant.square.row.to_s + "/" + ant.square.col.to_s + " - " + goLoc.row.to_s + "/" + goLoc.col.to_s )
-    doMoveLoc(ant, goLoc)
-  end
-end
 
-=begin
-	#Default move (old)
-	ai.my_ants.each do |ant|
-		# try to go north, if possible; otherwise try east, south, west.
-		[:N, :E, :S, :W].each do |dir|
-			if doMove(ant, dir)
-			 break
-			end
-		end
-	end
-=end
+      end #End Map-Square loop
+    end #End Map-Row loop  
+  end #End Ant loop  
+
+  #Loop through the ants again and collect the distance to the food/hill for each ant/food combination
+  targetList = TargetList.new
+  i = 0
+  route = Route.new
+  
+  #collect food/hill distances
+  ai.my_ants.each do |theAnt|
+    foodTargets.each do |foodLoc|
+      @route.setRoute(theAnt, foodLoc, @maxRows, @maxCols)
+      targetList.type     = "food"
+      targetList.ant      = theAnt
+      targetList.target   = foodLoc
+      targetList.distance = @route.getDistance
+      targetHash[targetList.dup] = targetList.distance
+     # @logger.log("Added to foodHash: " + foodList.food.row.to_s + "/" + foodList.food.col.to_s + "-" + foodList.distance.to_s)
+    end       
+    hillTargets.each do |hillLoc|
+      @route.setRoute(theAnt, hillLoc, @maxRows, @maxCols)
+      targetList.type     = "hill"
+      targetList.ant      = theAnt
+      targetList.target   = hillLoc
+      targetList.distance = @route.getDistance
+      targetHash[targetList.dup] = targetList.distance
+     # @logger.log("Added to foodHash: " + foodList.food.row.to_s + "/" + foodList.food.col.to_s + "-" + foodList.distance.to_s)
+    end         
+  end
+  
+  #Sort the targets by distance
+  targetsSorted = targetHash.sort_by{|theClass, distanceSorted | distanceSorted}
+    
+  #Now we loop through the ants *again* and send each ant to the closest foodSquare
+  antCount   = 1
+  ai.my_ants.each do |theAnt|  
+    i = 0
+    antMoved = false
+    while (i < targetsSorted.length && !antMoved)
+      firstTarget = targetsSorted[i][0]
+      if (firstTarget.ant == theAnt)
+        @logger.log("Ant : "+ firstTarget.ant.square.col.to_s + "/" + firstTarget.ant.square.col.to_s  + " Sent to: " +firstTarget.target.col.to_s + "/" + firstTarget.target.col.to_s )
+        @route.setRoute(theAnt, firstTarget.target, @maxRows, @maxCols)
+        direction = @route.getDirection
+        theAnt.order(direction)
+        @targets[firstTarget.target] = theAnt #Prevent sending ants to the same location
+        antMoved = true
+      end
+      i += 1
+    end
+    
+    #No food, no Hill, Go explore
+    if (!antMoved)
+      unseenDist  = Hash.new
+      @notSeen.each_key do |unseenLoc|
+        @route.setRoute(theAnt, unseenLoc, @maxRows, @maxCols)
+        unseenDist[unseenLoc] = @route.getDistance
+      end
+      unseenArray = unseenDist.sort_by{|location, distanceSorted| distanceSorted}
+      exploreLoc  = unseenArray[0][0]
+      @route.setRoute(theAnt, exploreLoc, @maxRows, @maxCols)
+      direction = @route.getDirection
+      theAnt.order(direction)
+      @targets[exploreLoc] = theAnt #Prevent sending ants to the same location
+    end
+    antCount += 1
+  end
+        
+end #End Class
+  

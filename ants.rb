@@ -284,21 +284,6 @@ class AI
   def map
     return @map
   end
-=begin	
-	#Code below added by RvbDev
-	def find_food
-	  rowCount = 0
-	  while rowCount <= self.settings[:rows]
-	   colCount = 0
-	   while colCount
-	      $stderr.puts "loop " + colCount.to_s
-     end
-	    rowCount += 1
-	    $stderr.puts "loop " + rowCount.to_s
-	  end
-	 #$stderr.puts self.settings[:rows] 
-	end
-=end	
 end
 
 

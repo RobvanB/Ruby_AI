@@ -15,6 +15,10 @@ class Route
  @@logger       = Logger.new
  @@logger.debug = false
  @@orders       = Hash.new
+   
+  def clearOrders
+    @@orders = Hash.new
+  end
   
   def setRoute(theAnt, endLoc, maxRows, maxCols)
     @ant      = theAnt
@@ -22,7 +26,7 @@ class Route
     @endLoc   = endLoc
     @maxRows  = maxRows
     @maxCols  = maxCols
-   @@orders[@ant] = endLoc    
+   #@@orders[@ant] = endLoc  
    #@@distance = distance
   end
    
@@ -78,6 +82,7 @@ class Route
     end
     
     @@logger.log("ANT :" + @ant.to_s + "Cur Loc (r/c): " + @ant.square.row.to_s + "/" + @ant.square.col.to_s + " move: " + move)
+    @@orders[@ant.square.neighbor(move)] = @ant
     return move
   end
   
@@ -92,7 +97,6 @@ class Route
        #end 
        
        if (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant? && !@@orders.has_key?(@ant.square.neighbor(move)))
-         @@orders[@ant.square.neighbor(move)] = @ant
          return move
        else
         #@@logger.log("Orders : " + @@orders.to_s)
@@ -109,7 +113,6 @@ class Route
        #end 
        
        if (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant?)
-         @@orders[@ant.square.neighbor(move)] = @ant
          return move
       else
        #@@logger.log("Orders : " + @@orders.to_s)
@@ -138,19 +141,5 @@ class Route
 #Code below currently not used 
   def compareTo(route)
     return @distance - route.distance
-  end
-  
-  def hashCode
-    #return @@startLoc.hash * 
-  end
-  
-  def equals curRoute
-    result = false
-    if (curRoute.instance_of? Route)
-      if (curRoute.getStartLoc == @startLoc && curRoute.getEndLoc == @endLoc)  
-        result = true
-      end
-      return result
-    end
   end
 end
