@@ -14,7 +14,7 @@ class Route
   @distance     = nil
  @@logger       = Logger.new
  @@logger.debug = false
- @@orders       = Hash.new
+  @@orders       = Hash.new
    
   def clearOrders
     @@orders = Hash.new
@@ -26,25 +26,16 @@ class Route
     @endLoc   = endLoc
     @maxRows  = maxRows
     @maxCols  = maxCols
-   #@@orders[@ant] = endLoc  
-   #@@distance = distance
   end
    
   def getDistance
-  #  $stderr.puts "ROUTE"  + @@startLoc.row.to_s
    rowDiff = [@startLoc.row , @endLoc.row].max - [@startLoc.row , @endLoc.row].min 
    colDiff = [@startLoc.col , @endLoc.col].max - [@startLoc.col , @endLoc.col].min  
-   #puts colDiff
-  #@@logger.log("Distance: " + rowDiff.to_s + ' + ' + colDiff.to_s)
    return rowDiff + colDiff
   end
   
   def getDirection()
-   #@@logger.log(@@orders.length.to_s)
-   #@@logger.log("CURRENT r/c: " + @@startLoc.row.to_s + "/" + @@startLoc.col.to_s)
-   #@@logger.log("DIRECTIONS r/c: " + @@endLoc.row.to_s + "/" + @@endLoc.col.to_s)
     #Make sure we are going somewhere
-    
     if(@startLoc.col < @endLoc.col)
       if(@endLoc.col - @startLoc.col >= @maxCols / 2)
         move = checkMove("W")
@@ -55,9 +46,9 @@ class Route
     
     if(@startLoc.col > @endLoc.col)
       if(@startLoc.col - @endLoc.col >= @maxCols / 2)
-        move = checkMove "E"
+        move = checkMove("E")
       else
-        move = checkMove "W"
+        move = checkMove("W")
       end
     end
     
@@ -78,50 +69,45 @@ class Route
     end
     
     if (@startLoc.row == @endLoc.row && @startLoc.col == @endLoc.col) 
-      move = checkMove("W") #for some reason we are already there... just go West
+      move = "H" #checkMove("W") #for some reason we are already there... just go West
     end
     
-    @@logger.log("ANT :" + @ant.to_s + "Cur Loc (r/c): " + @ant.square.row.to_s + "/" + @ant.square.col.to_s + " move: " + move)
-    @@orders[@ant.square.neighbor(move)] = @ant
+    #@@logger.log("ANT :" + @ant.to_s + "Cur Loc (r/c): " + @ant.square.row.to_s + "/" + @ant.square.col.to_s + " move: " + move)
+    if (move == "H")
+      @@orders[@ant.square] = @ant
+    else
+      @@orders[@ant.square.neighbor(move)] = @ant
+    end
     return move
   end
   
   #See if we can move in the requested direction. If not, cycle through all directions 
   def checkMove(move)
     i = 1
-    #@@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " start move: " + move)
     while i < 4
-      #@@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " proposed move: " + move)
-       #if (@@orders.has_key?(@@ant.square.neighbor(move)))
-        # @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
-       #end 
-       
-       if (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant? && !@@orders.has_key?(@ant.square.neighbor(move)))
-         return move
-       else
-        #@@logger.log("Orders : " + @@orders.to_s)
-        move = cycleDir(move)
-       end
-       i += 1
+     if (move == "H" || (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant? && !@@orders.has_key?(@ant.square.neighbor(move))))
+       return move
+     else
+      move = cycleDir(move)
+     end
+     i += 1
     end
-    #Cannot move ant, so now let's try moving it to previous locations
+
+    #Cannot move ant, so now let's try moving it to previous locations (i.e. don't check for previous orders)
+=begin    
     i = 1
     while i < 4
-      #@@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " proposed move: " + move)
-       #if (@@orders.has_key?(@@ant.square.neighbor(move)))
-        # @@logger.log("ANT :" + @@ant.to_s + " counter: " + i.to_s + " cannot move: " + move)
-       #end 
-       
-       if (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant?)
+      if (@ant.square.neighbor(move).land? && !@ant.square.neighbor(move).ant?)
          return move
       else
-       #@@logger.log("Orders : " + @@orders.to_s)
-        move = cycleDir(move)
+         move = cycleDir(move)
       end
       i += 1
     end
-    #@@logger.log("CANNOT MOVE ANT :" + @@ant.to_s + " counter: " + i.to_s + " last move: " + move)
-    return "W"
+=end
+    #Cannot move 
+    @@logger.log("Cannot move - Hold")
+    return "H"
   end  
   
   def cycleDir(dir)
@@ -137,9 +123,5 @@ class Route
       else
         return "UNKNOWN"
     end
-  end
-#Code below currently not used 
-  def compareTo(route)
-    return @distance - route.distance
   end
 end

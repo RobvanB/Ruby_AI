@@ -70,9 +70,8 @@ ai.run do |ai|
   hillTargets = []
   foodTargets = []
   targetHash  = Hash.new  #Hash of TargetList classes and distance
-  #@route.clearOrders
+  @route.clearOrders
   @targets = Hash.new
-  #@foodMap = Hash.new
 	
   ai.my_ants.each do |ant|  
     #Remove all 'visible' locations from our 'unseen' map
@@ -127,6 +126,10 @@ ai.run do |ai|
   
   #Sort the targets by distance
   targetsSorted = targetHash.sort_by{|theClass, distanceSorted | distanceSorted}
+  
+  targetsSorted.each do |tmpTarget, tmpDist|
+    @logger.log("Target List: " + tmpTarget.target.row.to_s + "/" + tmpTarget.target.col.to_s + " Dist: " +  tmpDist.to_s)
+  end
     
   #Now we loop through the ants *again* and send each ant to the closest foodSquare
   antCount   = 1
@@ -135,12 +138,20 @@ ai.run do |ai|
     antMoved = false
     while (i < targetsSorted.length && !antMoved)
       firstTarget = targetsSorted[i][0]
-      if (firstTarget.ant == theAnt)
-        @logger.log("Ant : "+ firstTarget.ant.square.col.to_s + "/" + firstTarget.ant.square.col.to_s  + " Sent to: " +firstTarget.target.col.to_s + "/" + firstTarget.target.col.to_s )
+      if (firstTarget.ant == theAnt && !@targets.has_key?(firstTarget.target))
+        @logger.log("Ant : "+ firstTarget.ant.square.row.to_s + "/" + firstTarget.ant.square.col.to_s  + " Sent to: " +firstTarget.target.row.to_s + "/" + firstTarget.target.col.to_s )
         @route.setRoute(theAnt, firstTarget.target, @maxRows, @maxCols)
         direction = @route.getDirection
-        theAnt.order(direction)
-        @targets[firstTarget.target] = theAnt #Prevent sending ants to the same location
+        if (direction == "H") # H = Cannot move
+          tmpTarget = firstTarget.dup
+          tmpTarget.target.row = theAnt.square.row
+          tmpTarget.target.col = theAnt.square.col
+          @targets[tmpTarget.target] = theAnt #Prevent sending ants to the same location
+        else
+          theAnt.order(direction)
+          @targets[firstTarget.target] = theAnt #Prevent sending ants to the same location
+          #@targets[theAnt.square] = theAnt #Prevent sending ants to the same location
+        end
         antMoved = true
       end
       i += 1
@@ -157,8 +168,12 @@ ai.run do |ai|
       exploreLoc  = unseenArray[0][0]
       @route.setRoute(theAnt, exploreLoc, @maxRows, @maxCols)
       direction = @route.getDirection
-      theAnt.order(direction)
-      @targets[exploreLoc] = theAnt #Prevent sending ants to the same location
+      if (direction == "H") # H = Cannot move
+        @targets[theAnt.square] = theAnt #Prevent sending ants to the same location
+      else
+        theAnt.order(direction)
+        @targets[exploreLoc] = theAnt #Prevent sending ants to the same location
+      end
     end
     antCount += 1
   end
