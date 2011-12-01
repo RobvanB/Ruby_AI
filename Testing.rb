@@ -4,6 +4,26 @@ require 'logger.rb'
 require 'robTest.rb'
 #require 'ruby-debug.rb'
 
+testh = Hash.new
+
+testh['abc1'] = 'blammo1'
+testh['abc2'] = 'blammo2'
+testh['abc3'] = 'blammo3'
+testh['abc4'] = 'blammo4'
+testh['abc5'] = 'blammo5'
+
+key = testh.select{|key, hash| hash == "blammo3" }[0][0]
+
+puts key
+
+#testh.each do |key, value|
+#  puts key + " " + value
+#end
+
+=begin
+
+
+
 class FoodList
   attr_accessor :food
   attr_accessor :ant
@@ -37,20 +57,6 @@ foodArray.each do |food|
 end
 
 foodArray.sort! { ||}
-
-=begin
-testh = Hash.new
-
-testh['abc'] = 'blammo'
-testh['abc'] = 'blammo'
-testh['abc'] = 'blammo'
-testh['abc'] = 'blammo'
-testh['abc'] = 'blammo'
-
-testh.each do |key, value|
-  puts key + " " + value
-end
-
 
 class HillHolder
   attr_accessor :hill

@@ -285,14 +285,3 @@ class AI
     return @map
   end
 end
-
-
-
-
-
-
-
-
-
-
-

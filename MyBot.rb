@@ -19,7 +19,7 @@ end
 ai               = AI.new
 @route           = Route.new
 @logger          = Logger.new
-@logger.debug    = false
+@logger.debug    = true
 #End declarations
 
 #Begin setup code 
