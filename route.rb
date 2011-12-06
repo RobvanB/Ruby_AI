@@ -6,11 +6,18 @@ $:.unshift File.dirname($0)
 require 'ants.rb'
 require 'logger.rb'
 
+class MapSquare
+  attr_accessor :row
+  attr_accessor :col
+end
+
+
 class Route
   
   @startLoc     = nil
   @endLoc       = nil
   @distance     = nil
+  @@routeHash    = Hash.new
  @@logger       = Logger.new
  @@logger.debug = true
  @@orders       = Hash.new
@@ -22,12 +29,13 @@ class Route
     @@orders.clear
   end
   
-  def setRoute(theAnt, endLoc, maxRows, maxCols)
+  def setRoute(theAnt, endLoc, maxRows, maxCols, map)
     @ant      = theAnt
     @startLoc = @ant.square
     @endLoc   = endLoc
     @maxRows  = maxRows
     @maxCols  = maxCols
+    @map      = map
   end
    
   def getDistance
@@ -37,56 +45,192 @@ class Route
   end
   
   def getDirection()
-    #Make sure we are going somewhere
-    @@logger.log("Start r/c: " + @startLoc.row.to_s + "/" + @startLoc.col.to_s + " End r/c : "  + @endLoc.row.to_s + "/" + @endLoc.col.to_s)
-    if(@startLoc.col < @endLoc.col)
-      if(@endLoc.col - @startLoc.col >= @maxCols / 2)
-        @@logger.log("1")
-        move = checkMove("W")
-        return move
-      else
-        @@logger.log("2")
-        move = checkMove("E")
-        return move
-      end  
-    end
+    i          = 1
+    foundStart = false
+    curSquare  = MapSquare.new
+    testSquare = MapSquare.new
+    curSquare.row = @endLoc.row 
+    curSquare.col = @endLoc.col
+   @@routeHash.clear
     
-    if(@startLoc.col > @endLoc.col)
-      if(@startLoc.col - @endLoc.col >= @maxCols / 2)
-        @@logger.log("3")
-        move = checkMove("E")
-        return move
-      else
-        @@logger.log("4")
-        move = checkMove("W")
-        return move
+    while (!foundStart) # Set the counter (i) for the 4 squares 'around' the target square
+    @@logger.log("Route while: Testing around CurSquare r/c: " + curSquare.row.to_s + "/" + curSquare.col.to_s)
+      testSquare.row = curSquare.row - 1
+      testSquare.col = curSquare.col 
+      if (checkNewLoc(testSquare) && curSquare.row > 0 && !haveSquare(testSquare)) #Land and Ant? / valid row-col? / already in hash?
+        @@routeHash[testSquare.dup] = i
       end
-    end
-    
-    if(@startLoc.row < @endLoc.row)
-      if(@endLoc.row - @startLoc.row >= @maxRows / 2)
-        @@logger.log("5")
-        move = checkMove("N")
-        return move
-      else
-        @@logger.log("6")
-        move = checkMove("S")
-        return move
+      foundStart = checkStartLoc(testSquare)     
+      
+      testSquare.row = curSquare.row + 1
+      testSquare.col = curSquare.col 
+      if (checkNewLoc(testSquare) && curSquare.row <= @maxRows && !haveSquare(testSquare))
+        @@routeHash[testSquare.dup] = i
       end
-    end
-    
-    if(@startLoc.row > @endLoc.row)
-      if(@startLoc.row - @endLoc.row >= @maxRows / 2)
-        @@logger.log("7")
-        move = checkMove("S")
-        return move
-      else
-        @@logger.log("8")
-        move = checkMove("N")
-        return move
+      foundStart = foundStart || checkStartLoc(testSquare)      
+      
+      testSquare.row = curSquare.row 
+      testSquare.col = curSquare.col - 1
+      if (checkNewLoc(testSquare) && curSquare.col > 0 && !haveSquare(testSquare))
+        @@routeHash[testSquare.dup] = i
       end
-    end
+      foundStart = foundStart || checkStartLoc(testSquare)
+      
+      testSquare.row = curSquare.row 
+      testSquare.col = curSquare.col + 1
+      if (checkNewLoc(testSquare) && curSquare.col <= @maxCols && !haveSquare(testSquare))
+        @@routeHash[testSquare.dup] = i
+      end
+      foundStart = foundStart || checkStartLoc(testSquare)
+      
+      #move to the next square -> needs to be closer to the starting point!
+      if(@startLoc.row < curSquare.row)
+        if(curSquare.row - @startLoc.row >= @maxRows / 2)
+          curSquare.row += 1
+        else
+          curSquare.row -= 1
+        end
+      end
     
+      if(@startLoc.row > curSquare.row)
+        if(@startLoc.row - curSquare.row >= @maxRows / 2)
+          curSquare.row -= 1
+        else
+          curSquare.row += 1
+        end
+      end
+      
+      if (@startLoc.col == curSquare.col)
+         if(@startLoc.col < curSquare.col)
+        if(curSquare.col - @startLoc.col >= @maxRows / 2)
+          curSquare.col += 1
+        else
+          curSquare.col -= 1
+        end
+      end
+    
+      if(@startLoc.col > curSquare.col)
+        if(@startLoc.col - curSquare.col >= @maxRows / 2)
+          curSquare.col -= 1
+        else
+          curSquare.col += 1
+        end
+      end
+      end
+      
+      if (curSquare.row > @maxRows)
+        curSquare.row = 1
+      end
+      if (curSquare.col > @maxCols)
+        curSquare.col = 1
+      end
+      i += 1
+    end  # End While Loop
+    
+    #Now get first square in our route
+    #hash.max_by{|k,v| v
+    @@routeHash.each do |k, v|
+      @@logger.log(k.row.to_s + "/" + k.col.to_s + " count: " + v.to_s)
+    end
+    gotoSquare = @@routeHash.max_by{|k,v|v}[0]
+    counter =  @@routeHash.max_by{|k,v|v}[1]
+    @@logger.log("Counter of selected record: " + counter.to_s)
+    @@logger.log("GotoSquare of selected record: " + gotoSquare.row.to_s + "/"+ gotoSquare.col.to_s)
+    returnMove = getMove(gotoSquare) 
+    @@logger.log("Returning from getMove: " + returnMove)
+    return returnMove
+  end #End getDirection()
+   
+  def checkNewLoc(newLocSquare) #make sure it's land and no ant
+    #checkLoc = @startLoc.dup #misuse the startloc so we have an instance of a square
+    #checkLoc.row = newLocSquare.row
+    #checkLoc.col = newLocSquare.col
+    @@logger.log("R/C " + newLocSquare.row.to_s + "/" + newLocSquare.col.to_s)
+    
+    checkLoc = @map[newLocSquare.row][newLocSquare.col]
+    
+    @@logger.log(checkLoc.to_s)
+    
+    if (checkLoc.land? && !checkLoc.ant?) # && !@@orders.has_key?(newPos))
+      @@logger.log("Checkloc yes")
+      return true
+    else
+      @@logger.log("Checkloc no")
+      return false
+    end
+  end #End checkNewLoc 
+    
+  def checkStartLoc(mapSquare)
+    if (mapSquare.row == @startLoc.row && mapSquare.col = @startLoc.col)
+      @@logger.log("CheckStartLoc: Found StartLoc")
+      return true
+    else
+      return false
+    end
+  end #End checkStartLoc
+
+  def getMove(theSquare)   
+    @@logger.log("getMove Start: " + @startLoc.row.to_s + "/" + @startLoc.col.to_s)
+    @@logger.log("getMove theSquare: " +  theSquare.row.to_s + "/" + theSquare.col.to_s)
+    if(@startLoc.col < theSquare.col)
+     if(theSquare.col - @startLoc.col >= @maxCols / 2)
+       @@logger.log("getMove 1")
+       move = "W" #checkMove("W")
+       return move
+     else
+       @@logger.log("getMove 2")
+       move = "E" #checkMove("E")
+       return move
+     end  
+   end
+    
+   if(@startLoc.col > theSquare.col)
+     if(@startLoc.col - theSquare.col >= @maxCols / 2)
+       @@logger.log("getMove 3")
+       move = "E" #checkMove("E")        return move
+     else
+       @@logger.log("getMove 4")
+       move = "W" #checkMove("W")
+       return move
+     end
+   end
+    
+   if(@startLoc.row < theSquare.row)
+     if(theSquare.row - @startLoc.row >= @maxRows / 2)
+        @@logger.log("getMove 5")
+        move = "N" #checkMove("N")
+        return move
+     else
+        @@logger.log("getMove 6")
+        move = "S" #checkMove("S")
+        return move
+     end
+   end
+    
+   if(@startLoc.row > theSquare.row)
+     if(@startLoc.row - theSquare.row >= @maxRows / 2)
+       @@logger.log("getMove 7")
+       move = "S" #checkMove("S")
+       return move
+     else
+       @@logger.log("getMove 8")
+       move = "N" #checkMove("N")
+       return move
+     end
+   end
+  end #End getMove
+
+  def haveSquare(testHashSquare) #see if we already have this square in the hash
+     @@routeHash.each do |hashSquare, v|
+       if (hashSquare.row == testHashSquare.row && hashSquare.col == testHashSquare.col)
+         return true
+       end
+     end
+     return false
+  end
+
+end #End class 
+=begin   
     if (@startLoc.row == @endLoc.row && @startLoc.col == @endLoc.col) 
       move = "H" #checkMove("W") #for some reason we are already there... 
       @@logger.log("Apparently we are there")
@@ -102,7 +246,7 @@ class Route
     end
     return move
   end
-  
+ 
   #See if we can move in the requested direction. 
   def checkMove(move)
     case move
@@ -184,7 +328,7 @@ class Route
       return false
     end
   end
-    
+=end    
 =begin  
     i = 1
     while i < 4
@@ -227,7 +371,7 @@ class Route
       end
       i += 1
     end
-=end
+
   def cycleDir(dir)
     case dir
       when "N"
@@ -242,4 +386,4 @@ class Route
         return "UNKNOWN"
     end
   end
-end
+=end

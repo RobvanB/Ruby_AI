@@ -4,25 +4,6 @@ require 'logger.rb'
 require 'robTest.rb'
 #require 'ruby-debug.rb'
 
-testh = Hash.new
-
-testh['abc1'] = 'blammo1'
-testh['abc2'] = 'blammo2'
-testh['abc3'] = 'blammo3'
-testh['abc4'] = 'blammo4'
-testh['abc5'] = 'blammo5'
-
-key = testh.select{|key, hash| hash == "blammo3" }[0][0]
-
-puts key
-
-#testh.each do |key, value|
-#  puts key + " " + value
-#end
-
-=begin
-
-
 
 class FoodList
   attr_accessor :food
@@ -30,33 +11,82 @@ class FoodList
   attr_accessor :distance
 end
 
-foodArray = []
+foodHash = Hash.new
 
 foodList = FoodList.new
 
 foodList.food     = 'f3'
 foodList.ant      = 'a3'
 foodList.distance = 31
-foodArray.push(foodList.dup)
+foodHash[foodList.dup] = 1
 
 foodList.food     = 'f1'
 foodList.ant      = 'a1'
 foodList.distance = 1
-foodArray.push(foodList.dup)
+foodHash[foodList.dup] = 2
 
 foodList.food     = 'f2'
 foodList.ant      = 'a2'
 foodList.distance = 2
-foodArray.push(foodList.dup)
+foodHash[foodList.dup] = 3
 
 foodTmp = FoodList.new
+foodTmp.food     = 'f2'
+foodTmp.ant      = 'a2'
+foodTmp.distance = 2
 
-foodArray.each do |food|
-  foodTmp = food
-  puts foodTmp.ant
+
+found = foodHash.has_key?(foodTmp)
+
+puts found
+
+foodHash.each do |theClass, v|
+  puts theClass.food
+  puts theClass.ant
+  puts theClass.distance.to_s
 end
 
-foodArray.sort! { ||}
+
+
+
+
+
+=begin
+myVar = false
+
+puts myVar.to_s
+
+myVar = myVar  || false
+
+puts myVar
+
+i = 1 
+myVar = false
+
+while (!myVar)
+  puts i.to_s
+  i += 1
+  if (i == 5)
+    myVar = true
+  end
+end
+
+
+testh = Hash.new
+
+testh['abc1'] = 1
+testh['abc2'] = 4
+testh['abc3'] = 5
+testh['abc4'] = 3
+testh['abc5'] = 2
+
+#key = testh.select{|key, hash| hash == "blammo3" }[0][0]
+
+puts testh.max_by{|k,v| v}[0]
+
+#testh.each do |key, value|
+#  puts key + " " + value
+#end
 
 class HillHolder
   attr_accessor :hill

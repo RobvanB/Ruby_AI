@@ -66,7 +66,7 @@ end
  #@logger.log("======Begin Turn: " + ai.turn_number.to_s + " Ant: " + ant.square.row.to_s + "/" + ant.square.col.to_s)
 
 ai.run do |ai|
-  @logger.log("Turn: " + ai.turn_number.to_s)
+  @logger.log("+++TURN+++: " + ai.turn_number.to_s)
   hillTargets = []
   foodTargets = []
   targetHash  = Hash.new  #Hash of TargetList classes and distance
@@ -105,7 +105,7 @@ ai.run do |ai|
   #collect food/hill distances
   ai.my_ants.each do |theAnt|
     foodTargets.each do |foodLoc|
-      @route.setRoute(theAnt, foodLoc, @maxRows, @maxCols)
+      @route.setRoute(theAnt, foodLoc, @maxRows, @maxCols, @map)
       targetList.type     = "food"
       targetList.ant      = theAnt
       targetList.target   = foodLoc
@@ -114,7 +114,7 @@ ai.run do |ai|
      # @logger.log("Added to foodHash: " + foodList.food.row.to_s + "/" + foodList.food.col.to_s + "-" + foodList.distance.to_s)
     end       
     hillTargets.each do |hillLoc|
-      @route.setRoute(theAnt, hillLoc, @maxRows, @maxCols)
+      @route.setRoute(theAnt, hillLoc, @maxRows, @maxCols, @map)
       targetList.type     = "hill"
       targetList.ant      = theAnt
       targetList.target   = hillLoc
@@ -127,9 +127,9 @@ ai.run do |ai|
   #Sort the targets by distance
   targetsSorted = targetHash.sort_by{|theClass, distanceSorted | distanceSorted}
   
-  targetsSorted.each do |tmpTarget, tmpDist|
-    @logger.log("Target List: " + tmpTarget.target.row.to_s + "/" + tmpTarget.target.col.to_s + " Dist: " +  tmpDist.to_s)
-  end
+  #targetsSorted.each do |tmpTarget, tmpDist|
+  #  @logger.log("Target List: " + tmpTarget.target.row.to_s + "/" + tmpTarget.target.col.to_s + " Dist: " +  tmpDist.to_s)
+  #end
     
   #Now we loop through the ants *again* and send each ant to the closest foodSquare
   antCount   = 1
@@ -139,9 +139,10 @@ ai.run do |ai|
     while (i < targetsSorted.length && !antMoved)
       firstTarget = targetsSorted[i][0]
       if (firstTarget.ant == theAnt && !@targets.has_key?(firstTarget.target))
-        @logger.log("Ant : "+ firstTarget.ant.square.row.to_s + "/" + firstTarget.ant.square.col.to_s  + " Sent to: " +firstTarget.target.row.to_s + "/" + firstTarget.target.col.to_s )
-        @route.setRoute(theAnt, firstTarget.target, @maxRows, @maxCols)
+        @logger.log("MyBot: Ant : "+ firstTarget.ant.square.row.to_s + "/" + firstTarget.ant.square.col.to_s  + " Sent to: " +firstTarget.target.row.to_s + "/" + firstTarget.target.col.to_s )
+        @route.setRoute(theAnt, firstTarget.target, @maxRows, @maxCols, @map)
         direction = @route.getDirection
+        @logger.log("MyBot: Ant order 1: " + direction)
         if (direction == "H") # H = Cannot move
           tmpTarget = firstTarget.dup
           tmpTarget.target.row = theAnt.square.row
@@ -149,6 +150,7 @@ ai.run do |ai|
           @targets[tmpTarget.target] = theAnt #Prevent sending ants to the same location
         else
           theAnt.order(direction)
+          
           @targets[firstTarget.target] = theAnt #Prevent sending ants to the same location
           #@targets[theAnt.square] = theAnt #Prevent sending ants to the same location
         end
@@ -161,16 +163,17 @@ ai.run do |ai|
     if (!antMoved)
       unseenDist  = Hash.new
       @notSeen.each_key do |unseenLoc|
-        @route.setRoute(theAnt, unseenLoc, @maxRows, @maxCols)
+        @route.setRoute(theAnt, unseenLoc, @maxRows, @maxCols, @map)
         unseenDist[unseenLoc] = @route.getDistance
       end
       unseenArray = unseenDist.sort_by{|location, distanceSorted| distanceSorted}
       exploreLoc  = unseenArray[0][0]
-      @route.setRoute(theAnt, exploreLoc, @maxRows, @maxCols)
+      @route.setRoute(theAnt, exploreLoc, @maxRows, @maxCols, @map)
       direction = @route.getDirection
       if (direction == "H") # H = Cannot move
         @targets[theAnt.square] = theAnt #Prevent sending ants to the same location
       else
+        @logger.log("Ant order 2: " + direction)
         theAnt.order(direction)
         @targets[exploreLoc] = theAnt #Prevent sending ants to the same location
       end
