@@ -141,6 +141,7 @@ ai.run do |ai|
       if (firstTarget.ant == theAnt && !@targets.has_key?(firstTarget.target))
         @logger.log("MyBot: Ant : "+ firstTarget.ant.square.row.to_s + "/" + firstTarget.ant.square.col.to_s  + " Sent to: " +firstTarget.target.row.to_s + "/" + firstTarget.target.col.to_s )
         @route.setRoute(theAnt, firstTarget.target, @maxRows, @maxCols, @map)
+        @logger.log("MyBot: call getDirection 1")
         direction = @route.getDirection
         @logger.log("MyBot: Ant order 1: " + direction)
         if (direction == "H") # H = Cannot move
@@ -169,6 +170,7 @@ ai.run do |ai|
       unseenArray = unseenDist.sort_by{|location, distanceSorted| distanceSorted}
       exploreLoc  = unseenArray[0][0]
       @route.setRoute(theAnt, exploreLoc, @maxRows, @maxCols, @map)
+      @logger.log("MyBot: call getDirection 2")
       direction = @route.getDirection
       if (direction == "H") # H = Cannot move
         @targets[theAnt.square] = theAnt #Prevent sending ants to the same location

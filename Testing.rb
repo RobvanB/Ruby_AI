@@ -1,10 +1,27 @@
 $:.unshift File.dirname($0)
+$:.unshift File.dirname('/var/lib/gems/1.8/gems/ruby-debug-0.10.4/cli/ruby-debug.rb')
+$:.unshift File.dirname('/var/lib/gems/1.8/gems/ruby-debug-base-0.10.4/lib/ruby-debug-base.rb')
+require 'ruby-debug-ide'
+
 require 'route.rb'
 require 'logger.rb'
 require 'robTest.rb'
 #require 'ruby-debug.rb'
 
 
+i = 10
+
+Debugger.wait_connection = true
+Debugger.start_remote
+
+while (i > 1)
+  breakpoint 
+  puts i.to_s
+  i -= 1
+end
+
+=begin
+  
 class FoodList
   attr_accessor :food
   attr_accessor :ant
@@ -35,7 +52,6 @@ foodTmp.food     = 'f2'
 foodTmp.ant      = 'a2'
 foodTmp.distance = 2
 
-
 found = foodHash.has_key?(foodTmp)
 
 puts found
@@ -46,12 +62,6 @@ foodHash.each do |theClass, v|
   puts theClass.distance.to_s
 end
 
-
-
-
-
-
-=begin
 myVar = false
 
 puts myVar.to_s

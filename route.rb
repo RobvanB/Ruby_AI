@@ -1,6 +1,6 @@
-#$:.unshift File.dirname('/var/lib/gems/1.8/gems/ruby-debug-0.10.4/cli/ruby-debug.rb')
-#$:.unshift File.dirname('/var/lib/gems/1.8/gems/ruby-debug-base-0.10.4/lib/ruby-debug-base.rb')
-#require 'ruby-debug.rb'
+$:.unshift File.dirname('/var/lib/gems/1.8/gems/ruby-debug-0.10.4/cli/ruby-debug.rb')
+$:.unshift File.dirname('/var/lib/gems/1.8/gems/ruby-debug-base-0.10.4/lib/ruby-debug-base.rb')
+require 'ruby-debug-ide'
 
 $:.unshift File.dirname($0)
 require 'ants.rb'
@@ -54,89 +54,142 @@ class Route
    @@routeHash.clear
     
     while (!foundStart) # Set the counter (i) for the 4 squares 'around' the target square
-    @@logger.log("Route while: Testing around CurSquare r/c: " + curSquare.row.to_s + "/" + curSquare.col.to_s)
+      @@logger.log("Route while: Testing around Square r/c: " + curSquare.row.to_s + "/" + curSquare.col.to_s)
       testSquare.row = curSquare.row - 1
       testSquare.col = curSquare.col 
-      if (checkNewLoc(testSquare) && curSquare.row > 0 && !haveSquare(testSquare)) #Land and Ant? / valid row-col? / already in hash?
-        @@routeHash[testSquare.dup] = i
+      if (curSquare.row > 0 && !haveSquare(testSquare)) #Land and Ant? / valid row-col? / already in hash?
+        if (checkNewLoc(testSquare))
+          foundStart = foundStart || checkStartLoc(testSquare)
+          if (!foundStart) #Don't add the start square in the hash, otherwise it will pick that one to move to
+            @@routeHash[testSquare.dup] = i
+          end
+        #else
+        #  @@routeHash[testSquare.dup] = 0 #So it is marked as 'unusable square'
+        end
       end
-      foundStart = checkStartLoc(testSquare)     
       
       testSquare.row = curSquare.row + 1
       testSquare.col = curSquare.col 
-      if (checkNewLoc(testSquare) && curSquare.row <= @maxRows && !haveSquare(testSquare))
-        @@routeHash[testSquare.dup] = i
+      if (curSquare.row <= @maxRows && !haveSquare(testSquare))
+        if (checkNewLoc(testSquare))
+          foundStart = foundStart || checkStartLoc(testSquare)
+          if (!foundStart) #Don't add the start square in the hash, otherwise it will pick that one to move to
+            @@routeHash[testSquare.dup] = i
+          end
+        #else
+        #  @@routeHash[testSquare.dup] = 0 #So it is marked as 'unusable square'
+        end
       end
-      foundStart = foundStart || checkStartLoc(testSquare)      
       
       testSquare.row = curSquare.row 
       testSquare.col = curSquare.col - 1
-      if (checkNewLoc(testSquare) && curSquare.col > 0 && !haveSquare(testSquare))
-        @@routeHash[testSquare.dup] = i
+      if (curSquare.col > 0 && !haveSquare(testSquare))
+        if (checkNewLoc(testSquare))
+          foundStart = foundStart || checkStartLoc(testSquare)
+          if (!foundStart) #Don't add the start square in the hash, otherwise it will pick that one to move to
+            @@routeHash[testSquare.dup] = i
+          end
+        #else
+        #  @@routeHash[testSquare.dup] = 0 #So it is marked as 'unusable square'
+        end  
       end
-      foundStart = foundStart || checkStartLoc(testSquare)
+      
       
       testSquare.row = curSquare.row 
       testSquare.col = curSquare.col + 1
-      if (checkNewLoc(testSquare) && curSquare.col <= @maxCols && !haveSquare(testSquare))
-        @@routeHash[testSquare.dup] = i
-      end
-      foundStart = foundStart || checkStartLoc(testSquare)
-      
-      #move to the next square -> needs to be closer to the starting point!
-      if(@startLoc.row < curSquare.row)
-        if(curSquare.row - @startLoc.row >= @maxRows / 2)
-          curSquare.row += 1
-        else
-          curSquare.row -= 1
-        end
-      end
-    
-      if(@startLoc.row > curSquare.row)
-        if(@startLoc.row - curSquare.row >= @maxRows / 2)
-          curSquare.row -= 1
-        else
-          curSquare.row += 1
-        end
+      if (curSquare.col <= @maxCols && !haveSquare(testSquare))
+        if (checkNewLoc(testSquare))
+          foundStart = foundStart || checkStartLoc(testSquare)
+          if (!foundStart) #Don't add the start square in the hash, otherwise it will pick that one to move to
+            @@routeHash[testSquare.dup] = i
+          end
+        #else
+        #  @@routeHash[testSquare.dup] = 0 #So it is marked as 'unusable square'
+        end 
       end
       
-      if (@startLoc.col == curSquare.col)
-         if(@startLoc.col < curSquare.col)
-        if(curSquare.col - @startLoc.col >= @maxRows / 2)
-          curSquare.col += 1
-        else
-          curSquare.col -= 1
-        end
-      end
-    
-      if(@startLoc.col > curSquare.col)
-        if(@startLoc.col - curSquare.col >= @maxRows / 2)
-          curSquare.col -= 1
-        else
-          curSquare.col += 1
-        end
-      end
-      end
       
-      if (curSquare.row > @maxRows)
-        curSquare.row = 1
-      end
-      if (curSquare.col > @maxCols)
-        curSquare.col = 1
-      end
+      #move to the next square in the 'mapping' logic -> needs to be closer to the starting point!
+      newPosOk = false
+      while (!newPosOk && !foundStart)
+        @@logger.log("newPosOk loop startSquare R/C; " + curSquare.row.to_s + "/" + curSquare.col.to_s)
+        if(@startLoc.row < curSquare.row)
+          if(curSquare.row - @startLoc.row >= @maxRows / 2)
+            curSquare.row += 1
+          else
+            curSquare.row -= 1
+          end
+        end
+      
+        if(@startLoc.row > curSquare.row)
+          if(@startLoc.row - curSquare.row >= @maxRows / 2)
+            curSquare.row -= 1
+          else
+            curSquare.row += 1
+          end
+        end
+        
+        if (@startLoc.row == curSquare.row)
+          if(@startLoc.col < curSquare.col)
+            if(curSquare.col - @startLoc.col >= @maxRows / 2)
+              curSquare.col += 1
+            else
+              curSquare.col -= 1
+            end
+          end
+        
+          if(@startLoc.col > curSquare.col)
+            if(@startLoc.col - curSquare.col >= @maxRows / 2)
+              curSquare.col -= 1
+            else
+              curSquare.col += 1
+            end
+          end
+        end # End row == row
+      
+        if (curSquare.row > @maxRows)
+          curSquare.row = 1
+        end
+        if (curSquare.col > @maxCols)
+          curSquare.col = 1
+        end
+        
+        #check to make sure that the new position is not a wall or an ant
+        if (checkNewLoc(curSquare))
+          newPosOk = true
+        else
+          @@logger.log("Bad square, R/C: " + curSquare.row.to_s + "/" + curSquare.col.to_s)
+        end
+        if (checkStartLoc(curSquare))
+          foundStart = true
+        end
+      end #End newPosOk loop  
       i += 1
     end  # End While Loop
     
-    #Now get first square in our route
+    #Now get the adjacent square with the lowest number
     #hash.max_by{|k,v| v
+    @gotoSquare = nil
+    @@logger.log("StartLoc r/c: " + @startLoc.row.to_s + "/" + @startLoc.col.to_s)
+    lowestNum = 999999
     @@routeHash.each do |k, v|
+      if (
+          ((k.row == @startLoc.row + 1 || k.row == @startLoc.row - 1) && k.col == @startLoc.col) ||          
+          ((k.col == @startLoc.col + 1 || k.col == @startLoc.col - 1) && k.row == @startLoc.row)
+         )
+          if (v < lowestNum)
+            lowestNum = v
+            @gotoSquare = k
+            @@logger.log("LowestNum :" + lowestNum.to_s)
+          end
+      end        
       @@logger.log(k.row.to_s + "/" + k.col.to_s + " count: " + v.to_s)
     end
-    gotoSquare = @@routeHash.max_by{|k,v|v}[0]
-    counter =  @@routeHash.max_by{|k,v|v}[1]
-    @@logger.log("Counter of selected record: " + counter.to_s)
-    @@logger.log("GotoSquare of selected record: " + gotoSquare.row.to_s + "/"+ gotoSquare.col.to_s)
-    returnMove = getMove(gotoSquare) 
+    #gotoSquare = @@routeHash.max_by{|k,v|v}[0]
+    #counter =  @@routeHash.max_by{|k,v|v}[1]
+    #@@logger.log("Counter of selected record: " + counter.to_s)
+    @@logger.log("GotoSquare of selected record: " + @gotoSquare.row.to_s + "/"+ @gotoSquare.col.to_s)
+    returnMove = getMove(@gotoSquare) 
     @@logger.log("Returning from getMove: " + returnMove)
     return returnMove
   end #End getDirection()
@@ -145,24 +198,24 @@ class Route
     #checkLoc = @startLoc.dup #misuse the startloc so we have an instance of a square
     #checkLoc.row = newLocSquare.row
     #checkLoc.col = newLocSquare.col
-    @@logger.log("R/C " + newLocSquare.row.to_s + "/" + newLocSquare.col.to_s)
+    #@@logger.log("R/C " + newLocSquare.row.to_s + "/" + newLocSquare.col.to_s)
     
     checkLoc = @map[newLocSquare.row][newLocSquare.col]
     
-    @@logger.log(checkLoc.to_s)
+    #@@logger.log(checkLoc.to_s)
     
     if (checkLoc.land? && !checkLoc.ant?) # && !@@orders.has_key?(newPos))
-      @@logger.log("Checkloc yes")
+      @@logger.log("Checkloc is land - no ant " + newLocSquare.row.to_s + "/" + newLocSquare.col.to_s)
       return true
     else
-      @@logger.log("Checkloc no")
+      @@logger.log("Checkloc land or ant" + newLocSquare.row.to_s + "/" + newLocSquare.col.to_s)
       return false
     end
   end #End checkNewLoc 
     
   def checkStartLoc(mapSquare)
     if (mapSquare.row == @startLoc.row && mapSquare.col = @startLoc.col)
-      @@logger.log("CheckStartLoc: Found StartLoc")
+      @@logger.log("CheckStartLoc: Found StartLoc testing " + mapSquare.row.to_s + "/" + mapSquare.col.to_s)
       return true
     else
       return false
